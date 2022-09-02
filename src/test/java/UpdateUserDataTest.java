@@ -1,19 +1,21 @@
-import POJO.Client;
-import POJO.CreationUserPojo;
+import api.ClientAuth;
+import api.ClientDelete;
+import api.ClientRegister;
+import api.ClientUpdate;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static io.restassured.RestAssured.given;
+import pojo.CreationUserCredential;
 
 public class UpdateUserDataTest {
-
-    CreationUserPojo creationUserPojo;
-    CreationUserPojo newEmail;
-    String token;
+    public String name;
+    public String password;
+    public String email;
+    CreationUserCredential newCreds;
 
     @Before
     public void setUp() {
@@ -22,77 +24,39 @@ public class UpdateUserDataTest {
 
     @Before
     public void create_credentials() {
-        creationUserPojo = CreationUserPojo.getRandomCredentials();
+        name = CreationUserCredential.creationName();
+        email = CreationUserCredential.creationEmail();
+        password = CreationUserCredential.creationPassword();
     }
 
     @After
-    public void delete_credentials(){
-        given()
-                .header("authorization", token)
-                .contentType(ContentType.JSON)
-                .body(creationUserPojo)
-                .body(newEmail)
-                .delete("/auth/user");
+    public void delete_credentials() {
+        CreationUserCredential creationUserCredential = newCreds;
+        ClientDelete.deleteUser(creationUserCredential);
     }
 
     @Test
     @DisplayName("Обновление пользовательских данных под авторизированным пользователем")
     public void update_user_data_with_authorization() {
-        //создание пользователя
-        Client.createUser(creationUserPojo);
-
-        //получение токена
-        token = Client.getToken(creationUserPojo);
-
-        given()
-                .header("authorization", token)
-                .log().all()
-                .get("/auth/user")
-                .then()
-                .log().all();
-
-
-        newEmail = new CreationUserPojo("Kesha@mail.ru", "", "");
-        given()
-                .contentType(ContentType.JSON)
-                .header("authorization", token)
-                .body(newEmail)
-                .when()
-                .log().all()
-                .patch("/auth/user")
-                .then()
-                .log().all()
-                .statusCode(200);
+        ClientRegister clientRegister = new ClientRegister();
+        ClientAuth clientAuth = new ClientAuth();
+        ClientUpdate clientUpdate = new ClientUpdate();
+        clientRegister.createUser(new CreationUserCredential(email, password, name));
+        clientAuth.authorizationUser(new CreationUserCredential(email, password, name));
+        newCreds = new CreationUserCredential("Uruk@mail.ru", "Nickolay", "Reptail");
+        Response update = clientUpdate.updateUser(new CreationUserCredential(email, password, name), newCreds);
+        update.then().statusCode(200).and().assertThat().body("success", Matchers.is(true));
     }
 
     @Test
     @DisplayName("Обновление пользовательских данных под НЕавторизированным пользователем")
     public void update_user_data_without_authorization() {
-        //создание пользователя
-        Client.createUser(creationUserPojo);
-
-        //получение токена
-        token = Client.getToken(creationUserPojo);
-
-        given()
-                .header("authorization", token)
-                .log().all()
-                .get("/auth/user")
-                .then()
-                .log().all();
-
-
-        newEmail = new CreationUserPojo("Maria@mail.ru", "", "");
-        given()
-                .contentType(ContentType.JSON)
-                .body(newEmail)
-                .when()
-                .log().all()
-                .patch("/auth/user")
-                .then()
-                .log().all()
-                .statusCode(401)
-                .and()
-                .assertThat().body("message", Matchers.is("You should be authorised"));
+        ClientRegister clientRegister = new ClientRegister();
+        newCreds = new CreationUserCredential(email, password, name);
+        clientRegister.createUser(newCreds);
+        ClientUpdate clientUpdate = new ClientUpdate();
+        Response updateWithoutAuth = clientUpdate.updateUserWithoutToken(newCreds);
+        updateWithoutAuth.then().assertThat()
+                .statusCode(401).and().body("message", Matchers.is("You should be authorised"));
     }
 }

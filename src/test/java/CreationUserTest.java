@@ -1,5 +1,6 @@
-import POJO.Client;
-import POJO.CreationUserPojo;
+import api.ClientDelete;
+import api.ClientRegister;
+import pojo.CreationUserCredential;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -9,8 +10,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class CreationUserTest {
-
-    CreationUserPojo creationUserPojo;
+    public String name;
+    public String password;
+    public String email;
 
     @Before
     public void setUp() {
@@ -19,35 +21,36 @@ public class CreationUserTest {
 
     @Before
     public void create_credentials() {
-        creationUserPojo = CreationUserPojo.getRandomCredentials();
+        name = CreationUserCredential.creationName();
+        email = CreationUserCredential.creationEmail();
+        password = CreationUserCredential.creationPassword();
     }
 
     @After
     public void delete_credentials() {
-        Client.deleteUser(creationUserPojo);
+        CreationUserCredential creationUserCredential = new CreationUserCredential(email, password, name);
+        ClientDelete.deleteUser(creationUserCredential);
     }
 
     @Test
     @DisplayName("Создание уникального пользователя")
     public void create_new_user() {
-        //регистрация
-        Response creation = Client.createUser(creationUserPojo);
-        creation.then()
-                .assertThat()
-                .statusCode(200)
-                .and()
-                .body("success", Matchers.is(true));
+        ClientRegister clientRegister = new ClientRegister();
+        Response createUniqueUser = clientRegister.createUser(new
+                CreationUserCredential(email, password, name));
+        createUniqueUser.then().assertThat().statusCode(200).and().body("success", Matchers.is(true));
     }
+
 
     @Test
     @DisplayName("Создание уже зарегистрированного пользователя")
     public void create_similar_user() {
         //регистрация
-        Response creation = Client.createUser(creationUserPojo);
-        creation.then().assertThat().statusCode(200);
-
-        //регистрация такого же пользователя
-        Response creationSimilar = Client.createUser(creationUserPojo);
+        ClientRegister clientRegister = new ClientRegister();
+        Response createFirstUser = clientRegister.createUser(new
+                CreationUserCredential(email, password, name));
+        Response creationSimilar = clientRegister.createUser(new
+                CreationUserCredential(email, password, name));
         creationSimilar.then()
                 .assertThat()
                 .statusCode(403)
@@ -59,12 +62,13 @@ public class CreationUserTest {
     @Test
     @DisplayName("Создание нового пользователя без одного поля")
     public void create_user_without_one_field() {
-        CreationUserPojo creationUserPojo = new CreationUserPojo("", "tototo1111", "Petrovka");
-        Response creation = Client.createUser(creationUserPojo);
-        creation.then()
+        ClientRegister clientRegister = new ClientRegister();
+        Response creationWithoutField = clientRegister.createUser(new CreationUserCredential(email, password, null));
+                creationWithoutField.then()
                 .assertThat()
                 .statusCode(403)
                 .and()
                 .body("message", Matchers.is("Email, password and name are required fields"));
     }
+
 }

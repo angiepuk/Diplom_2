@@ -1,4 +1,4 @@
-package POJO;
+package pojo;
 import java.util.ArrayList;
 
 public class CreationOrderPOJO {

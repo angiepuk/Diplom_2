@@ -1,16 +1,5 @@
-import POJO.Client;
-import POJO.CreationOrderPOJO;
-import POJO.CreationUserPojo;
-import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import java.util.ArrayList;
 import static io.restassured.RestAssured.given;
-
+/*
 public class GetOrdersTest {
     CreationUserPojo creationUserPojo;
     String token;
@@ -136,3 +125,4 @@ public class GetOrdersTest {
                 .assertThat().body("message", Matchers.is("You should be authorised"));
     }
 }
+*/

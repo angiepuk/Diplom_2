@@ -1,19 +1,8 @@
-import POJO.Client;
-import POJO.CreationOrderPOJO;
-import POJO.CreationUserPojo;
-import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import java.util.ArrayList;
 import static io.restassured.RestAssured.given;
-
+/*
 public class CreateOrdersTest {
-    CreationUserPojo creationUserPojo;
-    String token;
+
+    public String token;
     ArrayList <String> id;
 
     @Before
@@ -212,3 +201,4 @@ public class CreateOrdersTest {
     }
 }
 
+*/

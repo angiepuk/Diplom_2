@@ -1,24 +1,31 @@
-package POJO;
+package pojo;
 
-import jdk.jfr.ContentType;
 import org.apache.commons.lang3.RandomStringUtils;
 
-public class CreationUserPojo {
+public class CreationUserCredential {
     private String name;
     private String email;
     private String password;
 
-    public CreationUserPojo(String email, String password, String name) {
+    public CreationUserCredential(String email, String password, String name) {
         this.email = email;
         this.password = password;
         this.name = name;
     }
 
-    public static CreationUserPojo getRandomCredentials(){
-        String email = RandomStringUtils.random(5, true, true) + "@yandex.ru";
-        String password = RandomStringUtils.random(5, true, true);
-        String name= RandomStringUtils.random(8, true, false);
-        return new CreationUserPojo(email, password, name);
+    public CreationUserCredential() {
+    }
+
+    public static String creationName(){
+        return RandomStringUtils.random(8, true, false);
+    }
+
+    public static String creationPassword(){
+        return RandomStringUtils.random(8, true, false);
+    }
+
+    public static String creationEmail(){
+        return RandomStringUtils.random(8, true, false)+ "@yandex.ru";
     }
 
     public String getName() {
