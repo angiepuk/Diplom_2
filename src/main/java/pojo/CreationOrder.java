@@ -1,11 +1,11 @@
 package pojo;
 import java.util.ArrayList;
 
-public class CreationOrderPOJO {
+public class CreationOrder {
 
     ArrayList<String> ingredients;
 
-    public CreationOrderPOJO(ArrayList ingredients){
+    public CreationOrder(ArrayList ingredients){
         this.ingredients = ingredients;
     }
 

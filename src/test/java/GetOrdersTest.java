@@ -1,13 +1,20 @@
-import static io.restassured.RestAssured.given;
-/*
-public class GetOrdersTest {
-    CreationUserPojo creationUserPojo;
-    String token;
-    ArrayList <String> id;
+import api.ClientAuth;
+import api.ClientDelete;
+import api.ClientOrder;
+import api.ClientRegister;
+import io.qameta.allure.junit4.DisplayName;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import org.hamcrest.Matchers;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import pojo.CreationUserCredential;
 
-    public String getToken() {
-        return token;
-    }
+public class GetOrdersTest {
+    public String name;
+    public String password;
+    public String email;
 
     @Before
     public void setUp() {
@@ -15,114 +22,50 @@ public class GetOrdersTest {
     }
 
     @Before
-    public void create_credentials() {
-        creationUserPojo = CreationUserPojo.getRandomCredentials();
+    public void createCredentials() {
+        name = CreationUserCredential.creationName();
+        email = CreationUserCredential.creationEmail();
+        password = CreationUserCredential.creationPassword();
     }
 
     @After
-    public void delete_credentials() {
-        Client.deleteUser(creationUserPojo);
+    public void deleteCredentials() {
+        CreationUserCredential creationUserCredential = new CreationUserCredential(email, password, name);
+        ClientDelete.deleteUser(creationUserCredential);
     }
 
     @Test
     @DisplayName("Получение заказов авторизированного пользователя")
-    public void get_order_with_authorization(){
-        //регистрация пользователя
-        Client.createUser(creationUserPojo);
-
-        //авторизация пользователя-получение токена
-        token = Client.getToken(creationUserPojo);
-
-        //получение id для того, чтобы положить их в создание заказа в качестве ингредиентов
-        id = given()
-                .header("authorization", token)
-                .get("/ingredients")
-                .then()
-                .extract().path("data._id");
-
-        //создание заказа
-        ArrayList<String> someIngredients = new ArrayList<>();
-
-        someIngredients.add(id.get(1));
-        someIngredients.add(id.get(3));
-        someIngredients.add(id.get(5));
-
-        CreationOrderPOJO burger = new CreationOrderPOJO(someIngredients);
-
-
-        given()
-                .contentType(ContentType.JSON)
-                .header("authorization", token)
-                .body(burger)
-                .post("/orders")
-                .then()
-                .statusCode(200);
-
-        given()
-                .contentType(ContentType.JSON)
-                .header("authorization", token)
-                .body(burger)
-                .post("/orders")
-                .then()
-                .statusCode(200);
-
-        given()
-                .contentType(ContentType.JSON)
-                .header("authorization", token)
-                .log().all()
-                .get("/orders")
-                .then()
-                .log().all();
+    public void getOrderWithAuthorization() {
+        ClientRegister clientRegister = new ClientRegister();
+        clientRegister.createUser(new CreationUserCredential(email, password, name));
+        ClientAuth clientAuth = new ClientAuth();
+        clientAuth.authorizationUser(new CreationUserCredential(email, password, name));
+        ClientOrder clientOrder = new ClientOrder();
+        clientOrder.createOrderWithIngred(new CreationUserCredential(email, password, name));
+        clientOrder.createOrderWithIngred(new CreationUserCredential(email, password, name));
+        Response orders = clientOrder.getOrderWithAutho(new CreationUserCredential(email, password, name));
+        orders.then()
+                .statusCode(200)
+                .and()
+                .assertThat()
+                .body("success", Matchers.is(true));
     }
 
     @Test
     @DisplayName("Получение заказов пользователя без авторизации")
-    public void get_order_without_authorization(){
-        //регистрация пользователя
-        Client.createUser(creationUserPojo);
-
-        //авторизация пользователя-получение токена
-        token = Client.getToken(creationUserPojo);
-
-
-        //получение id для того, чтобы положить их в создание заказа в качестве ингредиентов
-        id = given()
-                .header("authorization", token)
-                .get("/ingredients")
-                .then()
-                .extract().path("data._id");
-
-        //создание заказа
-        ArrayList<String> someIngredients = new ArrayList<>();
-
-        someIngredients.add(id.get(1));
-        someIngredients.add(id.get(3));
-        someIngredients.add(id.get(5));
-
-        CreationOrderPOJO burger = new CreationOrderPOJO(someIngredients);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(burger)
-                .post("/orders")
-                .then()
-                .statusCode(200);
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(burger)
-                .post("/orders")
-                .then()
-                .statusCode(200);
-
-        given()
-                .contentType(ContentType.JSON)
-                .log().all()
-                .get("/orders")
-                .then()
-                .log().all()
+    public void getOrderWithoutAuthorization(){
+        ClientRegister clientRegister = new ClientRegister();
+        clientRegister.createUser(new CreationUserCredential(email, password, name));
+        ClientAuth clientAuth = new ClientAuth();
+        clientAuth.authorizationUser(new CreationUserCredential(email, password, name));
+        ClientOrder clientOrder = new ClientOrder();
+        clientOrder.createOrderWithIngred(new CreationUserCredential(email, password, name));
+        clientOrder.createOrderWithIngred(new CreationUserCredential(email, password, name));
+        Response orders = clientOrder.getOrderWithoutAutho();
+        orders.then()
                 .statusCode(401)
-                .assertThat().body("message", Matchers.is("You should be authorised"));
+                .assertThat()
+                .body("message", Matchers.is("You should be authorised"));
     }
 }
-*/

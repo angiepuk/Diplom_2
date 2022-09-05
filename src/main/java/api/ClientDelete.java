@@ -1,15 +1,15 @@
 package api;
-
+import io.qameta.allure.Step;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import pojo.CreationUserCredential;
-
 import static io.restassured.RestAssured.given;
 
 public class ClientDelete {
 
     public static String token;
 
+    @Step("Удаление пользователя")
     public static Response deleteUser(CreationUserCredential creationUserCredential) {
         token = given()
                 .contentType(ContentType.JSON)
@@ -17,7 +17,6 @@ public class ClientDelete {
                 .when()
                 .post("/auth/login")
                 .then()
-                .statusCode(200)
                 .extract().path("accessToken");
 
         return given()

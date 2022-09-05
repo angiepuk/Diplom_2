@@ -23,21 +23,21 @@ public class UpdateUserDataTest {
     }
 
     @Before
-    public void create_credentials() {
+    public void createCredentials() {
         name = CreationUserCredential.creationName();
         email = CreationUserCredential.creationEmail();
         password = CreationUserCredential.creationPassword();
     }
 
     @After
-    public void delete_credentials() {
+    public void deleteCredentials() {
         CreationUserCredential creationUserCredential = newCreds;
         ClientDelete.deleteUser(creationUserCredential);
     }
 
     @Test
     @DisplayName("Обновление пользовательских данных под авторизированным пользователем")
-    public void update_user_data_with_authorization() {
+    public void updateUserDataWithAuthorization() {
         ClientRegister clientRegister = new ClientRegister();
         ClientAuth clientAuth = new ClientAuth();
         ClientUpdate clientUpdate = new ClientUpdate();
@@ -45,18 +45,23 @@ public class UpdateUserDataTest {
         clientAuth.authorizationUser(new CreationUserCredential(email, password, name));
         newCreds = new CreationUserCredential("Uruk@mail.ru", "Nickolay", "Reptail");
         Response update = clientUpdate.updateUser(new CreationUserCredential(email, password, name), newCreds);
-        update.then().statusCode(200).and().assertThat().body("success", Matchers.is(true));
+        update.then()
+                .statusCode(200)
+                .and()
+                .assertThat().body("success", Matchers.is(true));
     }
 
     @Test
     @DisplayName("Обновление пользовательских данных под НЕавторизированным пользователем")
-    public void update_user_data_without_authorization() {
+    public void updateUserDataWithoutAuthorization() {
         ClientRegister clientRegister = new ClientRegister();
         newCreds = new CreationUserCredential(email, password, name);
         clientRegister.createUser(newCreds);
         ClientUpdate clientUpdate = new ClientUpdate();
-        Response updateWithoutAuth = clientUpdate.updateUserWithoutToken(newCreds);
-        updateWithoutAuth.then().assertThat()
-                .statusCode(401).and().body("message", Matchers.is("You should be authorised"));
+        Response update = clientUpdate.updateUserWithoutToken(newCreds);
+        update.then().assertThat()
+                .statusCode(401)
+                .and()
+                .body("message", Matchers.is("You should be authorised"));
     }
 }

@@ -1,5 +1,4 @@
 package pojo;
-
 import org.apache.commons.lang3.RandomStringUtils;
 
 public class CreationUserCredential {
@@ -51,5 +50,4 @@ public class CreationUserCredential {
     public void setPassword(String password) {
         this.password = password;
     }
-
 }

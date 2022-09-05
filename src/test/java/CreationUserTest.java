@@ -1,5 +1,6 @@
 import api.ClientDelete;
 import api.ClientRegister;
+import io.restassured.http.ContentType;
 import pojo.CreationUserCredential;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
@@ -8,6 +9,8 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static io.restassured.RestAssured.given;
 
 public class CreationUserTest {
     public String name;
@@ -20,38 +23,37 @@ public class CreationUserTest {
     }
 
     @Before
-    public void create_credentials() {
+    public void createCredentials() {
         name = CreationUserCredential.creationName();
         email = CreationUserCredential.creationEmail();
         password = CreationUserCredential.creationPassword();
     }
 
     @After
-    public void delete_credentials() {
+    public void deleteCredentials() {
         CreationUserCredential creationUserCredential = new CreationUserCredential(email, password, name);
         ClientDelete.deleteUser(creationUserCredential);
     }
 
     @Test
     @DisplayName("Создание уникального пользователя")
-    public void create_new_user() {
+    public void createNewUser() {
         ClientRegister clientRegister = new ClientRegister();
-        Response createUniqueUser = clientRegister.createUser(new
-                CreationUserCredential(email, password, name));
-        createUniqueUser.then().assertThat().statusCode(200).and().body("success", Matchers.is(true));
+        Response user = clientRegister.createUser(new CreationUserCredential(email, password, name));
+        user.then()
+                .assertThat()
+                .statusCode(200)
+                .and()
+                .body("success", Matchers.is(true));
     }
-
 
     @Test
     @DisplayName("Создание уже зарегистрированного пользователя")
-    public void create_similar_user() {
-        //регистрация
+    public void createSimilarUser() {
         ClientRegister clientRegister = new ClientRegister();
-        Response createFirstUser = clientRegister.createUser(new
-                CreationUserCredential(email, password, name));
-        Response creationSimilar = clientRegister.createUser(new
-                CreationUserCredential(email, password, name));
-        creationSimilar.then()
+        clientRegister.createUser(new CreationUserCredential(email, password, name));
+        Response user = clientRegister.createUser(new CreationUserCredential(email, password, name));
+        user.then()
                 .assertThat()
                 .statusCode(403)
                 .and()
@@ -61,14 +63,14 @@ public class CreationUserTest {
 
     @Test
     @DisplayName("Создание нового пользователя без одного поля")
-    public void create_user_without_one_field() {
+    public void createUserWithoutOneField() {
         ClientRegister clientRegister = new ClientRegister();
-        Response creationWithoutField = clientRegister.createUser(new CreationUserCredential(email, password, null));
-                creationWithoutField.then()
+        clientRegister.createUser(new CreationUserCredential(email, password, name));
+        Response user = clientRegister.createUser(new CreationUserCredential(email, "", name));
+        user.then()
                 .assertThat()
                 .statusCode(403)
                 .and()
                 .body("message", Matchers.is("Email, password and name are required fields"));
     }
-
 }

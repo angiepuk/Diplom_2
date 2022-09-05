@@ -1,9 +1,20 @@
-import static io.restassured.RestAssured.given;
-/*
-public class CreateOrdersTest {
+import api.ClientAuth;
+import api.ClientDelete;
+import api.ClientOrder;
+import api.ClientRegister;
+import io.qameta.allure.junit4.DisplayName;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import org.hamcrest.Matchers;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import pojo.CreationUserCredential;
 
-    public String token;
-    ArrayList <String> id;
+public class CreateOrdersTest {
+    public String name;
+    public String password;
+    public String email;
 
     @Before
     public void setUp() {
@@ -11,47 +22,29 @@ public class CreateOrdersTest {
     }
 
     @Before
-    public void create_credentials() {
-        creationUserPojo = CreationUserPojo.getRandomCredentials();
+    public void createCredentials() {
+        name = CreationUserCredential.creationName();
+        email = CreationUserCredential.creationEmail();
+        password = CreationUserCredential.creationPassword();
     }
 
     @After
-    public void delete_credentials(){
-        given()
-                .header("authorization", token)
-                .contentType(ContentType.JSON)
-                .body(creationUserPojo)
-                .delete("/auth/user");
+    public void deleteCredentials() {
+        CreationUserCredential creationUserCredential = new CreationUserCredential(email, password, name);
+        ClientDelete.deleteUser(creationUserCredential);
     }
 
     @Test
     @DisplayName("Создание заказа с авторизацией")
-    public void create_order_with_authorization(){
-        //регистрация пользователя
-        Client.createUser(creationUserPojo);
+    public void createOrderWithAuthorization() {
 
-        //авторизация пользователя-получение токена
-        token = Client.getToken(creationUserPojo);
-
-        //получение id для того, чтобы положить их в создание заказа в качестве ингредиентов
-        id = given()
-                .header("authorization", token)
-                .log().all()
-                .get("/ingredients")
-                .then()
-                .log().all()
-                .extract().path("data._id");
-
-        //создание заказа
-        CreationOrderPOJO allIngredients = new CreationOrderPOJO(id);
-        given()
-                .header("authorization", token)
-                .contentType(ContentType.JSON)
-                .log().all()
-                .body(allIngredients)
-                .post("/orders")
-                .then()
-                .log().all()
+        ClientRegister clientRegister = new ClientRegister();
+        clientRegister.createUser(new CreationUserCredential(email, password, name)); //зарегистрироваться
+        ClientAuth clientAuth = new ClientAuth();
+        clientAuth.authorizationUser(new CreationUserCredential(email, password, name)); //залогиниться
+        ClientOrder clientOrder = new ClientOrder();
+        Response order = clientOrder.createOrder(new CreationUserCredential(email, password, name));
+        order.then()
                 .statusCode(200)
                 .and()
                 .assertThat().body("success", Matchers.is(true));
@@ -59,31 +52,15 @@ public class CreateOrdersTest {
 
     @Test
     @DisplayName("Создание заказа без авторизации")
-    public void create_order_without_authorization(){
-        //регистрация пользователя
-        Client.createUser(creationUserPojo);
+    public void createOrderWithoutAuthorization() {
 
-        //авторизация пользователя-получение токена
-        token = Client.getToken(creationUserPojo);
-
-        //получение id для того, чтобы положить их в создание заказа в качестве ингредиентов
-        id = given()
-                .header("authorization", token)
-                .log().all()
-                .get("/ingredients")
-                .then()
-                .log().all()
-                .extract().path("data._id");
-
-        //создание заказа
-        CreationOrderPOJO allIngredients = new CreationOrderPOJO(id);
-        given()
-                .contentType(ContentType.JSON)
-                .log().all()
-                .body(allIngredients)
-                .post("/orders")
-                .then()
-                .log().all()
+        ClientRegister clientRegister = new ClientRegister();
+        clientRegister.createUser(new CreationUserCredential(email, password, name));
+        ClientAuth clientAuth = new ClientAuth();
+        clientAuth.authorizationUser(new CreationUserCredential(email, password, name));
+        ClientOrder clientOrder = new ClientOrder();
+        Response order = clientOrder.createOrderWithoutAutho(new CreationUserCredential(email, password, name));
+        order.then()
                 .statusCode(200)
                 .and()
                 .assertThat().body("success", Matchers.is(true));
@@ -91,39 +68,14 @@ public class CreateOrdersTest {
 
     @Test
     @DisplayName("Создание заказа с ингредиентами")
-    public void create_order_with_ingredients(){
-        //регистрация пользователя
-        Client.createUser(creationUserPojo);
-
-        //авторизация пользователя-получение токена
-        token = Client.getToken(creationUserPojo);
-
-        //получение id для того, чтобы положить их в создание заказа в качестве ингредиентов
-        id = given()
-                .header("authorization", token)
-                .log().all()
-                .get("/ingredients")
-                .then()
-                .log().all()
-                .extract().path("data._id");
-
-        //создание заказа
-
-        ArrayList <String> someIngredients = new ArrayList<>();
-
-        someIngredients.add(id.get(1));
-        someIngredients.add(id.get(3));
-        someIngredients.add(id.get(5));
-
-        CreationOrderPOJO burger = new CreationOrderPOJO(someIngredients);
-        given()
-                .contentType(ContentType.JSON)
-                .header("authorization", token)
-                .log().all()
-                .body(burger)
-                .post("/orders")
-                .then()
-                .log().all()
+    public void createOrderWithIngredients() {
+        ClientRegister clientRegister = new ClientRegister();
+        clientRegister.createUser(new CreationUserCredential(email, password, name));
+        ClientAuth clientAuth = new ClientAuth();
+        clientAuth.authorizationUser(new CreationUserCredential(email, password, name));
+        ClientOrder clientOrder = new ClientOrder();
+        Response order = clientOrder.createOrderWithIngred(new CreationUserCredential(email, password, name));
+        order.then()
                 .statusCode(200)
                 .and()
                 .assertThat().body("success", Matchers.is(true));
@@ -131,31 +83,14 @@ public class CreateOrdersTest {
 
     @Test
     @DisplayName("Создание заказа без ингредиентов")
-    public void create_order_without_ingredients(){
-        //регистрация пользователя
-        Client.createUser(creationUserPojo);
-
-        //авторизация пользователя-получение токена
-        token = Client.getToken(creationUserPojo);
-
-        //получение id для того, чтобы положить их в создание заказа в качестве ингредиентов
-        id = given()
-                .header("authorization", token)
-                .log().all()
-                .get("/ingredients")
-                .then()
-                .log().all()
-                .extract().path("data._id");
-
-        //создание заказа
-        CreationOrderPOJO allIngredients = new CreationOrderPOJO(null);
-        given()
-                .header("authorization", token)
-                .contentType(ContentType.JSON)
-                .log().all()
-                .body(allIngredients)
-                .post("/orders")
-                .then()
+    public void createOrderWithoutIngredients(){
+        ClientRegister clientRegister = new ClientRegister();
+        clientRegister.createUser(new CreationUserCredential(email, password, name));
+        ClientAuth clientAuth = new ClientAuth();
+        clientAuth.authorizationUser(new CreationUserCredential(email, password, name));
+        ClientOrder clientOrder = new ClientOrder();
+        Response order = clientOrder.createOrderWithoutIngred(new CreationUserCredential(email, password, name));
+        order.then()
                 .log().all()
                 .statusCode(400)
                 .and()
@@ -164,41 +99,16 @@ public class CreateOrdersTest {
 
     @Test
     @DisplayName("Создание заказа с некорректным хэшем")
-    public void create_order_with_incorrect_hash(){
-        //регистрация пользователя
-        Client.createUser(creationUserPojo);
-
-        //авторизация пользователя-получение токена
-        token = Client.getToken(creationUserPojo);
-
-        //получение id для того, чтобы положить их в создание заказа в качестве ингредиентов
-        id = given()
-                .header("authorization", token)
-                .log().all()
-                .get("/ingredients")
-                .then()
-                .log().all()
-                .extract().path("data._id");
-
-        //создание заказа
-
-        ArrayList <String> someIngredients = new ArrayList<>();
-
-        someIngredients.add(id.get(1));
-        someIngredients.add("incorrecthash0");
-
-
-        CreationOrderPOJO burger = new CreationOrderPOJO(someIngredients);
-        given()
-                .contentType(ContentType.JSON)
-                .header("authorization", token)
-                .log().all()
-                .body(burger)
-                .post("/orders")
-                .then()
+    public void createOrderWithIncorrectHash() {
+        ClientRegister clientRegister = new ClientRegister();
+        clientRegister.createUser(new CreationUserCredential(email, password, name));
+        ClientAuth clientAuth = new ClientAuth();
+        clientAuth.authorizationUser(new CreationUserCredential(email, password, name));
+        ClientOrder clientOrder = new ClientOrder();
+        Response order = clientOrder.createOrderWithIncorHash(new CreationUserCredential(email, password, name));
+        order.then()
                 .log().all()
                 .statusCode(500);
     }
 }
 
-*/
